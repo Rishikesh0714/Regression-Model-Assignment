@@ -1,0 +1,120 @@
+---
+title: "Motor Trend Car Road Tests (Regrssion Models' Assignment) "
+author: "Rishikesh Pillay"
+date: "5/22/2021"
+output: pdf_document
+---
+
+**Data Description**:
+The data was extracted from the 1974 Motor Trend US magazine, and comprises fuel consumption and 10 aspects of automobile design and performance for 32 automobiles (1973–74 models).
+A data frame with 32 observations on 11 (numeric) variables.
+You can further read about it on 'mtcars' help page. Here we need two features 
+1. mpg Miles/(US) gallon
+2. am	Transmission (0 = automatic, 1 = manual)
+
+**Objective**
+Looking at a data set of collection of cars, we are interested in exploring the relationship between a set of variables and miles per gallon (MPG)(outcome).They are particularly interested in the following two questions:
+
+* "Is an automatic or manual transmission better for MPG"
+* "Quantify the MPG difference between automatic and manual transmission"
+
+**Exploratory Data Analysis ** 
+
+We see there are 11 variables and 32 observatio . There are 19 Automatic Transmission car and 13 Manual.
+```{r EDA, echo=FALSE, message=FALSE, warning=FALSE}
+library(ggplot2)
+library(dplyr)
+data ("mtcars")
+cars <- mtcars %>% 
+        select(mpg,am) %>% 
+        mutate(am = as.factor(am))
+str(mtcars)
+summary(cars)
+
+```
+From graph we see that annual Transmission(1) cars have large MPG compare to Automatic Transmission(0).
+Well now we want to find if it is statistically significant .
+
+```{r boxplot, echo=FALSE}
+
+#boxplot
+g <- ggplot(cars, aes(am, mpg)) 
+g <- g + geom_boxplot(aes(fill = am))
+g <- g +  scale_fill_brewer(palette="Dark2")
+g <- g+ xlab('Transmision') + ylab("Miles Per Gallon") + labs(title = "Effect of Automatic and Manual Tramission on Mpg")
+g <- g + theme(plot.title = element_text(hjust = 0.5))
+g
+```
+
+**Regression Model**
+
+There are four assumptions associated with a linear regression model:
+
+1. Linearity: The relationship between X and the mean of Y is linear.
+2. Homoscedasticity: The variance of residual is the same for any value of X.
+3. Independence: Observations are independent of each other.
+4. Normality: For any fixed value of X, Y is normally distributed.
+
+The below is summary is of model where output is mpg and predictor is dummy variable are of transmission (am). 
+```{r Regression Model, echo=FALSE}
+
+#Regression Model
+fit <- lm(mpg ~ am, cars)  # cars have factor "am" variable
+summary(fit)
+```
+
+First notice that two sample T test tells us that there is statistically significant difference in mean of mpg(outcome) when different Transmission is used.
+This answer our first question ; Manual transmission is better than automatic transmission for MPG.
+Below we explore Residual plots.
+
+The proportion of the variance for a dependent variable(mpg) that's explained by an independent variable(am) is given by R^2 = 0.3385
+
+*Coefficient Interpretation*
+
+From above model fit 
+
+1. Estimate 17.147 is coefficient of automatic transmission predictor(as it is first level '0') that means 17.147 Intercept is the mean of the mpg when am is "0"
+2.  17.147 + 7.244939 = 24.39231 is the mean of mpg when "am" is "1" or Manual transmission
+I hope this answers our second question "difference 
+in between "Quantify the MPG difference between automatic and manual transmission".
+
+**Residual Diagnostics**
+
+```{r residual plot, echo=FALSE}
+
+#residual plot
+plot(fit, which = 1)
+
+```
+From residual plot we see patterns which indicate poor model fitting (Underfittied) because we use only one predictor for modeling.
+
+**Better model**
+
+Assuming that the model is linear with additive iid errors (with finite variance); 
+Two important point to consider is overfiting result in Variance Inflation and Underfiting introduce bias.
+Also Variance increase dramatically when predictors are highly correlated with each other.
+
+
+**Nested Model**
+
+```{r Nested model, echo=FALSE, message=TRUE, warning=FALSE}
+
+#Nested model
+library(car)
+fit1 <- lm(mpg ~., mtcars)
+fit2 <- update(fit1, mpg ~ cyl)
+fit3 <- update(fit1, mpg ~ cyl+ wt + disp)
+fit <- lm(mpg ~ am, cars)
+anova( fit1, fit, fit2, fit3)
+
+```
+
+**Appendix**
+```{r ref.label=knitr::all_labels(), echo=TRUE, eval=FALSE}
+```
+
+Note :
+
+1. I have to exceed the 2 pages limit for showing multiple models (apologies)
+2. Conclusion is under Regression model and coefficient interpretation
+3. And Limitation of model is that residual plot show pattern as our model is Bias
